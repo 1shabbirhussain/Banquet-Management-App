@@ -1,4 +1,4 @@
-# fyp
+# event_ease
 
 A new Flutter project.
 

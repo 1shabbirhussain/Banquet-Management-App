@@ -1,6 +1,6 @@
 {
-    "name": "fyp",
-    "short_name": "fyp",
+    "name": "event_ease",
+    "short_name": "event_ease",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

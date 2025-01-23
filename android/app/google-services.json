@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "537537730360",
+    "project_id": "event-ease-633e9",
+    "storage_bucket": "event-ease-633e9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:537537730360:android:18347757ab83be50c993cd",
+        "android_client_info": {
+          "package_name": "com.example.event_ease"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyANoPtgLusSF6NIZCU7yiwl60FyL-5iT9M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
