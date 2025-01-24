@@ -1,11 +1,13 @@
 import 'dart:developer';
 
+import 'package:event_ease/routes/app_routes.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:event_ease/utils/colors.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 class MyBookingsScreen extends StatelessWidget {
   const MyBookingsScreen({super.key});
@@ -173,6 +175,7 @@ class BookingTile extends StatefulWidget {
 
 class _BookingTileState extends State<BookingTile> {
   String? banquetImageUrl;
+  late Map<String, dynamic> banquetData;
 
   @override
   void initState() {
@@ -190,7 +193,7 @@ class _BookingTileState extends State<BookingTile> {
 
       if (banquetSnapshot.exists) {
         log("Banquet details fetched successfully.");
-        final banquetData = banquetSnapshot.data() as Map<String, dynamic>;
+        banquetData = banquetSnapshot.data() as Map<String, dynamic>;
         setState(() {
           banquetImageUrl = banquetData['images']?.isNotEmpty == true
               ? banquetData['images'][0] // Get the first image URL
@@ -220,14 +223,16 @@ class _BookingTileState extends State<BookingTile> {
           // Background Image with Opacity
           if (banquetImageUrl != null)
             Opacity(
-              opacity: 1,
+              opacity: 0.2,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(10),
-                child: Image.network(
-                  banquetImageUrl!,
-                  fit: BoxFit.cover,
+                child: SizedBox(
+                  height:status== "Confirmed" ?150:  200,
                   width: double.infinity,
-                  height: double.infinity,
+                  child: Image.network(
+                    banquetImageUrl!,
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
             ),
@@ -259,7 +264,7 @@ class _BookingTileState extends State<BookingTile> {
                           Text(
                             "Date: ${DateFormat('d MMM, yyyy').format(DateTime.parse(date))}",
                             style: const TextStyle(
-                                fontSize: 14, color: Colors.black87),
+                                fontSize: 14, color: Colors.black87,fontWeight: FontWeight.w500),
                           ),
                         ],
                       ),
@@ -273,7 +278,7 @@ class _BookingTileState extends State<BookingTile> {
                           const SizedBox(width: 5),
                           Text(
                             "Price: Rs. $price",
-                            style: const TextStyle(fontSize: 14),
+                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                           ),
                         ],
                       ),
@@ -293,6 +298,7 @@ class _BookingTileState extends State<BookingTile> {
                             "Status: $status",
                             style: TextStyle(
                               fontSize: 14,
+                              fontWeight: FontWeight.w500,
                               color: status == "Confirmed"
                                   ? Colors.green
                                   : status == "Pending"
@@ -310,17 +316,15 @@ class _BookingTileState extends State<BookingTile> {
                               size: 16, color: MyColors.textPrimary),
                           TextButton(
                             onPressed: () {
-                              // Get.toNamed('/banquet-details', arguments: {
-                              //   'banquet_id': widget.data['banquet_id'],
-                              //   'banquet_name': banquetName,
-                              // });
+                              Get.toNamed(AppRoutes.banquetDetailScreen,
+                                  arguments: {"banquet" : banquetData , "hideButton": true} );
                               log("$banquetImageUrl Details");
                             },
                             child: const Text(
                               "View Details",
                               style: TextStyle(
                                 fontSize: 14,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w700,
                                 color: MyColors.buttonSecondary,
                               ),
                             ),
@@ -331,6 +335,7 @@ class _BookingTileState extends State<BookingTile> {
                   ],
                 ),
                 const SizedBox(height: 10),
+                // ========================Cancel Button=========================
                 if (status == 'Pending' || status == 'Rejected')
                   Align(
                     alignment: Alignment.center,
@@ -342,6 +347,7 @@ class _BookingTileState extends State<BookingTile> {
                           style: TextStyle(color: Colors.white)),
                     ),
                   ),
+                // ===========================Rating============================
                 if (isPast && !widget.data.containsKey('rating'))
                   Row(
                     children: [

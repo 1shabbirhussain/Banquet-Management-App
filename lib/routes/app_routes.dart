@@ -49,7 +49,8 @@ class AppRoutes {
         name: banquetDetailScreen,
         page: () {
           final banquet = Get.arguments['banquet'];
-          return BanquetDetailScreen(banquet: banquet);
+          final hideButton = Get.arguments.containsKey('hideButton') ? Get.arguments['hideButton'] : false;
+          return BanquetDetailScreen(banquet: banquet, hideButton: hideButton);
         }),
     GetPage(
         name: bookingScreen,

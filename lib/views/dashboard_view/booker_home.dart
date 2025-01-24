@@ -89,7 +89,7 @@ class _BanquetListPageState extends State<BookerHome> {
                       return GestureDetector(
                         onTap: () {
                           // Navigate to banquet details
-                          Get.toNamed(AppRoutes.banquetDetailScreen, arguments: {'banquet': banquet});
+                          Get.toNamed(AppRoutes.banquetDetailScreen, arguments: {'banquet': banquet, "hideButton": false});
                         },
                         child: BanquetCard(banquet: banquet),
                       );
@@ -223,6 +223,19 @@ class BanquetCard extends StatelessWidget {
               height: 120,
               width: double.infinity,
               fit: BoxFit.cover,
+                  loadingBuilder: 
+                  (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Skeletonizer(
+                      enabled: true,
+                      enableSwitchAnimation: true,
+                      child: Container(
+                        height: 120,
+                        width: double.infinity,
+                        color: Colors.grey[300],
+                      ),
+                    );
+                  }
             ),
           ),
 

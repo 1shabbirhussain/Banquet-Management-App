@@ -6,8 +6,9 @@ import 'package:event_ease/utils/colors.dart';
 
 class BanquetDetailScreen extends StatelessWidget {
   final Map<String, dynamic> banquet;
+  final bool hideButton;
 
-  const BanquetDetailScreen({super.key, required this.banquet});
+  const BanquetDetailScreen({super.key, required this.banquet, required this.hideButton});
 
   @override
   Widget build(BuildContext context) {
@@ -219,7 +220,7 @@ class BanquetDetailScreen extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: Container(
+      bottomNavigationBar: !hideButton ?Container(
         padding: const EdgeInsets.all(16.0),
         color: Colors.transparent,
         child: ElevatedButton(
@@ -237,7 +238,7 @@ class BanquetDetailScreen extends StatelessWidget {
             style: TextStyle(fontSize: 18, color: Colors.white),
           ),
         ),
-      ),
+      ): const SizedBox.shrink()
     );
   }
 
