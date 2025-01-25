@@ -27,7 +27,8 @@ class _BanquetListPageState extends State<BookerHome> {
       final name = data['name']?.toString().toLowerCase() ?? "";
       final price = double.tryParse(data['price_per_day'] ?? "0") ?? 0.0;
 
-      final matchesSearch = searchQuery.isEmpty || name.contains(searchQuery.toLowerCase());
+      final matchesSearch =
+          searchQuery.isEmpty || name.contains(searchQuery.toLowerCase());
       final matchesPrice = (minPrice == null || price >= minPrice!) &&
           (maxPrice == null || price <= maxPrice!);
 
@@ -40,14 +41,14 @@ class _BanquetListPageState extends State<BookerHome> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Choose your Banquet", style: TextStyle(color: MyColors.textSecondary)),
+        title: const Text("Choose your Banquet",
+            style: TextStyle(color: MyColors.textSecondary)),
         centerTitle: true,
         backgroundColor: MyColors.backgroundDark,
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance.collection('banquets').snapshots(),
         builder: (context, snapshot) {
-
           if (snapshot.hasError) {
             return const Center(
               child: Text("An error occurred while fetching banquets."),
@@ -70,13 +71,15 @@ class _BanquetListPageState extends State<BookerHome> {
             child: Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
                   child: searchAndFilterWidget(context),
                 ),
                 Expanded(
                   child: GridView.builder(
                     padding: const EdgeInsets.all(16),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       crossAxisSpacing: 16,
                       mainAxisSpacing: 16,
@@ -84,12 +87,17 @@ class _BanquetListPageState extends State<BookerHome> {
                     ),
                     itemCount: filteredBanquets.length,
                     itemBuilder: (context, index) {
-                      final banquet = filteredBanquets[index].data() as Map<String, dynamic>;
-            
+                      final banquet = filteredBanquets[index].data()
+                          as Map<String, dynamic>;
+
                       return GestureDetector(
                         onTap: () {
                           // Navigate to banquet details
-                          Get.toNamed(AppRoutes.banquetDetailScreen, arguments: {'banquet': banquet, "hideButton": false});
+                          Get.toNamed(AppRoutes.banquetDetailScreen,
+                              arguments: {
+                                'banquet': banquet,
+                                "hideButton": false
+                              });
                         },
                         child: BanquetCard(banquet: banquet),
                       );
@@ -128,62 +136,63 @@ class _BanquetListPageState extends State<BookerHome> {
         IconButton(
           icon: const Icon(Icons.filter_list),
           color: MyColors.accent,
-          onPressed: () async {
-            await showModalBottomSheet(
-              context: context,
-              builder: (context) {
-                double? tempMinPrice = minPrice;
-                double? tempMaxPrice = maxPrice;
-                return StatefulBuilder(
-                  builder: (context, setState) {
-                    return Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          TextField(
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              labelText: "Min Price",
-                            ),
-                            onChanged: (value) {
-                              setState(() {
-                                tempMinPrice = double.tryParse(value);
-                              });
-                            },
-                          ),
-                          const SizedBox(height: 10),
-                          TextField(
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              labelText: "Max Price",
-                            ),
-                            onChanged: (value) {
-                              setState(() {
-                                tempMaxPrice = double.tryParse(value);
-                              });
-                            },
-                          ),
-                          const SizedBox(height: 20),
-                          ElevatedButton(
-                            onPressed: () {
-                              setState(() {
-                                minPrice = tempMinPrice;
-                                maxPrice = tempMaxPrice;
-                              });
-                              applyFilters();
-                              Navigator.pop(context);
-                            },
-                            child: const Text("Apply Filters"),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                );
-              },
-            );
-          },
+          onPressed: () {},
+          // onPressed: () async {
+          //   await showModalBottomSheet(
+          //     context: context,
+          //     builder: (context) {
+          //       double? tempMinPrice = minPrice;
+          //       double? tempMaxPrice = maxPrice;
+          //       return StatefulBuilder(
+          //         builder: (context, setState) {
+          //           return Padding(
+          //             padding: const EdgeInsets.all(16.0),
+          //             child: Column(
+          //               mainAxisSize: MainAxisSize.min,
+          //               children: [
+          //                 TextField(
+          //                   keyboardType: TextInputType.number,
+          //                   decoration: const InputDecoration(
+          //                     labelText: "Min Price",
+          //                   ),
+          //                   onChanged: (value) {
+          //                     setState(() {
+          //                       tempMinPrice = double.tryParse(value);
+          //                     });
+          //                   },
+          //                 ),
+          //                 const SizedBox(height: 10),
+          //                 TextField(
+          //                   keyboardType: TextInputType.number,
+          //                   decoration: const InputDecoration(
+          //                     labelText: "Max Price",
+          //                   ),
+          //                   onChanged: (value) {
+          //                     setState(() {
+          //                       tempMaxPrice = double.tryParse(value);
+          //                     });
+          //                   },
+          //                 ),
+          //                 const SizedBox(height: 20),
+          //                 ElevatedButton(
+          //                   onPressed: () {
+          //                     setState(() {
+          //                       minPrice = tempMinPrice;
+          //                       maxPrice = tempMaxPrice;
+          //                     });
+          //                     applyFilters();
+          //                     Navigator.pop(context);
+          //                   },
+          //                   child: const Text("Apply Filters"),
+          //                 ),
+          //               ],
+          //             ),
+          //           );
+          //         },
+          //       );
+          //     },
+          //   );
+          // },
         ),
       ],
     );
@@ -198,13 +207,17 @@ class BanquetCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String name = banquet['name'] ?? 'Unknown';
-    final String imageUrl = banquet['images'] != null && banquet['images'].isNotEmpty
-        ? banquet['images'][0]
-        : 'https://via.placeholder.com/150';
-    final double rating = banquet['ratings'] != null && banquet['ratings']['average'] != null
-        ? banquet['ratings']['average'].toDouble()
-        : 0.0;
-    final String location = banquet['location'] != null ? banquet['location']['address'] ?? 'Unknown location' : 'Unknown location';
+    final String imageUrl =
+        banquet['images'] != null && banquet['images'].isNotEmpty
+            ? banquet['images'][0]
+            : 'https://via.placeholder.com/150';
+    final double rating =
+        banquet['ratings'] != null && banquet['ratings']['average'] != null
+            ? banquet['ratings']['average'].toDouble()
+            : 0.0;
+    final String location = banquet['location'] != null
+        ? banquet['location']['address'] ?? 'Unknown location'
+        : 'Unknown location';
     final String price = banquet['price_per_day'] ?? 'N/A';
 
     return Card(
@@ -218,25 +231,20 @@ class BanquetCard extends StatelessWidget {
           // Banquet Image
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
-            child: Image.network(
-              imageUrl,
-              height: 120,
-              width: double.infinity,
-              fit: BoxFit.cover,
-                  loadingBuilder: 
-                  (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return Skeletonizer(
-                      enabled: true,
-                      enableSwitchAnimation: true,
-                      child: Container(
-                        height: 120,
-                        width: double.infinity,
-                        color: Colors.grey[300],
-                      ),
-                    );
-                  }
-            ),
+            child: Image.network(imageUrl,
+                height: 120, width: double.infinity, fit: BoxFit.cover,
+                loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return Skeletonizer(
+                enabled: true,
+                enableSwitchAnimation: true,
+                child: Container(
+                  height: 120,
+                  width: double.infinity,
+                  color: Colors.grey[300],
+                ),
+              );
+            }),
           ),
 
           // Banquet Info

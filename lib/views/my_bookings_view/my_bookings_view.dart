@@ -48,21 +48,24 @@ class MyBookingsScreen extends StatelessWidget {
 
           final bookings = snapshot.data!.docs;
 
-          return ListView.builder(
-            itemCount: bookings.length,
-            itemBuilder: (context, index) {
-              final booking = bookings[index].data() as Map<String, dynamic>;
-              return BookingTile(
-                data: booking,
-                onCancel: () =>
-                    _cancelBooking(context, booking, bookings[index].id),
-                onRate: booking['status'] == 'Completed' &&
-                        !booking.containsKey('rating')
-                    ? (rating) => _rateBooking(
-                        context, booking, bookings[index].id, rating)
-                    : null,
-              );
-            },
+          return Skeletonizer(
+            enabled: snapshot.connectionState == ConnectionState.waiting,
+            child: ListView.builder(
+              itemCount: bookings.length,
+              itemBuilder: (context, index) {
+                final booking = bookings[index].data() as Map<String, dynamic>;
+                return BookingTile(
+                  data: booking,
+                  onCancel: () =>
+                      _cancelBooking(context, booking, bookings[index].id),
+                  onRate: booking['status'] == 'Completed' &&
+                          !booking.containsKey('rating')
+                      ? (rating) => _rateBooking(
+                          context, booking, bookings[index].id, rating)
+                      : null,
+                );
+              },
+            ),
           );
         },
       ),
@@ -192,14 +195,14 @@ class _BookingTileState extends State<BookingTile> {
           .get();
 
       if (banquetSnapshot.exists) {
-        log("Banquet details fetched successfully.");
+        // log("Banquet details fetched successfully.");
         banquetData = banquetSnapshot.data() as Map<String, dynamic>;
         setState(() {
           banquetImageUrl = banquetData['images']?.isNotEmpty == true
               ? banquetData['images'][0] // Get the first image URL
               : null;
         });
-        log("$banquetImageUrl IMAGE URL");
+        // log("$banquetImageUrl IMAGE URL");
       }
     } catch (e) {
       debugPrint("Error fetching banquet details: $e");
