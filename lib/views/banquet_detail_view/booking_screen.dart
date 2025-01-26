@@ -191,6 +191,8 @@ class _BookingScreenState extends State<BookingScreen> {
                           'price': price,
                           'created_at': DateTime.now().toIso8601String(),
                           'status': "Pending",
+                          'owner_id': widget.banquet['owner_id'],
+                          'image_url': widget.banquet['images'][0],
                         });
 
                         SnackbarUtils.closeSnackbar();

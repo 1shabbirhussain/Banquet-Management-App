@@ -11,7 +11,6 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await NotificationService.initialize();
-  BookingNotificationListener.startListening(); // Start listening to booking status changes
   Get.put(NotificationController()); // Initialize the controller
 
 

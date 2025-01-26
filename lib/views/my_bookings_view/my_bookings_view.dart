@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:event_ease/routes/app_routes.dart';
+import 'package:event_ease/utils/snackbar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -58,7 +59,7 @@ class MyBookingsScreen extends StatelessWidget {
                   data: booking,
                   onCancel: () =>
                       _cancelBooking(context, booking, bookings[index].id),
-                  onRate: booking['status'] == 'Completed' &&
+                  onRate: booking['status'] == 'Confirmed' &&
                           !booking.containsKey('rating')
                       ? (rating) => _rateBooking(
                           context, booking, bookings[index].id, rating)
@@ -75,12 +76,7 @@ class MyBookingsScreen extends StatelessWidget {
   Future<void> _cancelBooking(BuildContext context,
       Map<String, dynamic> booking, String bookingId) async {
     if (booking['status'] == 'Confirmed') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("You cannot cancel a confirmed booking."),
-          backgroundColor: Colors.red,
-        ),
-      );
+      SnackbarUtils.showError("You cannot cancel a confirmed booking.");
       return;
     }
 
@@ -89,19 +85,9 @@ class MyBookingsScreen extends StatelessWidget {
           .collection('bookings')
           .doc(bookingId)
           .delete();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Booking canceled successfully."),
-          backgroundColor: Colors.green,
-        ),
-      );
+      SnackbarUtils.showSuccess("Booking canceled successfully.");
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Failed to cancel booking: $e"),
-          backgroundColor: Colors.red,
-        ),
-      );
+      SnackbarUtils.showError("Failed to cancel booking: $e");
     }
   }
 
@@ -135,30 +121,14 @@ class MyBookingsScreen extends StatelessWidget {
         });
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Thank you for your rating!"),
-          backgroundColor: Colors.green,
-        ),
-      );
+      SnackbarUtils.showSuccess("Thank you for your rating!");
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Failed to submit rating: $e"),
-          backgroundColor: Colors.red,
-        ),
-      );
+      SnackbarUtils.showError("Failed to submit rating: $e");
     }
   }
 }
 
 //========================BOOKING TILE======================================
-
-// import 'package:cloud_firestore/cloud_firestore.dart';
-// import 'package:flutter/material.dart';
-// import 'package:get/get.dart';
-// import 'package:intl/intl.dart';
-// import 'package:event_ease/utils/colors.dart';
 
 class BookingTile extends StatefulWidget {
   final Map<String, dynamic> data;
@@ -230,7 +200,7 @@ class _BookingTileState extends State<BookingTile> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: SizedBox(
-                  height:status== "Confirmed" ?150:  200,
+                  height:status== "Confirmed" && !isPast ? 155:  205,
                   width: double.infinity,
                   child: Image.network(
                     banquetImageUrl!,
@@ -339,7 +309,7 @@ class _BookingTileState extends State<BookingTile> {
                 ),
                 const SizedBox(height: 10),
                 // ========================Cancel Button=========================
-                if (status == 'Pending' || status == 'Rejected')
+                if ((status == 'Pending' || status == 'Rejected')&& !isPast)
                   Align(
                     alignment: Alignment.center,
                     child: ElevatedButton(
@@ -350,8 +320,8 @@ class _BookingTileState extends State<BookingTile> {
                           style: TextStyle(color: Colors.white)),
                     ),
                   ),
-                // ===========================Rating============================
-                if (isPast && !widget.data.containsKey('rating'))
+
+                  if (isPast && !widget.data.containsKey('rating'))
                   Row(
                     children: [
                       const Text("Rate now: "),
@@ -368,6 +338,19 @@ class _BookingTileState extends State<BookingTile> {
                       }),
                     ],
                   ),
+                if (isPast && widget.data.containsKey('rating'))
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.star,
+                        color: Colors.amber,
+                      ),
+                       Text("Your Ratings: ${widget.data['rating']}", style: const TextStyle(fontWeight: FontWeight.bold),),
+                    ],
+                  ),
+                // ===========================Rating============================
+                
               ],
             ),
           ),

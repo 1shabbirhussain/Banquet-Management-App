@@ -1,7 +1,12 @@
+import 'dart:developer';
+
 import 'package:event_ease/controllers/notification_icon_controller.dart';
+import 'package:event_ease/services/notification_listener.dart';
 import 'package:event_ease/utils/colors.dart';
 import 'package:event_ease/views/dashboard_view/booker_home.dart';
+import 'package:event_ease/views/dashboard_view/owner_home.dart';
 import 'package:event_ease/views/my_bookings_view/my_bookings_view.dart';
+import 'package:event_ease/views/my_bookings_view/owner_booking_view.dart';
 import 'package:event_ease/views/notification_view/notification_view.dart';
 import 'package:event_ease/views/profile_view/profile_view.dart';
 import 'package:flutter/material.dart';
@@ -31,9 +36,13 @@ class _NavbarPageState extends State<NavbarPage> {
       }
     });
   }
+  
 
   @override
   Widget build(BuildContext context) {
+      BookingNotificationListener.startListening(role: widget.role); // Start listening to booking status changes
+
+    log("Role: ${widget.role}");
     return Scaffold(
       body: _getPage(_currentPage),
       bottomNavigationBar: ClipRRect(
@@ -43,72 +52,70 @@ class _NavbarPageState extends State<NavbarPage> {
         ),
         child: SizedBox(
           height: 60,
-          child: Obx(() {
-            return GNav(
-              backgroundColor: MyColors.backgroundDark,
-              rippleColor: Colors.grey.shade800,
-              hoverColor: Colors.grey.shade700,
-              haptic: true,
-              tabBorderRadius: 15,
-              curve: Curves.ease,
-              duration: const Duration(milliseconds: 100),
-              gap: 8,
-              color: Colors.grey,
-              activeColor: MyColors.textSecondary,
-              iconSize: 20,
-              textSize: 20,
-              tabBackgroundColor: MyColors.accentDark.withOpacity(0.3),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              tabMargin: const EdgeInsets.symmetric(horizontal: 5),
-              tabs: [
-                const GButton(
-                  icon: FontAwesomeIcons.house,
-                  text: 'Home',
-                ),
-                const GButton(
-                  icon: FontAwesomeIcons.calendarCheck,
-                  text: 'Bookings',
-                ),
-                // Notifications Tab with reactive icon
+          child: GNav(
+            backgroundColor: MyColors.backgroundDark,
+            rippleColor: Colors.grey.shade800,
+            hoverColor: Colors.grey.shade700,
+            haptic: true,
+            tabBorderRadius: 15,
+            curve: Curves.ease,
+            duration: const Duration(milliseconds: 100),
+            gap: 8,
+            color: Colors.grey,
+            activeColor: MyColors.textSecondary,
+            iconSize: 20,
+            textSize: 20,
+            tabBackgroundColor: MyColors.accentDark.withOpacity(0.3),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            tabMargin: const EdgeInsets.symmetric(horizontal: 5),
+            tabs: [
+              const GButton(
+                icon: FontAwesomeIcons.house,
+                text: 'Home',
+              ),
+              const GButton(
+                icon: FontAwesomeIcons.calendarCheck,
+                text: 'Bookings',
+              ),
+              // Notifications Tab with reactive icon
 
-                GButton(
-                  icon: FontAwesomeIcons.bell, // Keep the bell icon constant
-                  text: 'Notifications',
-                  leading: Obx(
-                    () => Stack(
-                      children: [
-                        const Icon(
-                          FontAwesomeIcons.bell, // The main bell icon
-                          size: 20,
-                          color: Colors.grey,
-                        ),
-                        if (_notificationController.hasNewNotification
-                            .value) // Show dot if new notification
-                          Positioned(
-                            right: 0,
-                            top: 0,
-                            child: Container(
-                              width: 8, // Size of the dot
-                              height: 8,
-                              decoration: const BoxDecoration(
-                                color: MyColors.textPrimary, // Red dot color
-                                shape: BoxShape.circle,
-                              ),
+              GButton(
+                icon: FontAwesomeIcons.bell, // Keep the bell icon constant
+                text: 'Notifications',
+                leading: Obx(
+                  () => Stack(
+                    children: [
+                      const Icon(
+                        FontAwesomeIcons.bell, // The main bell icon
+                        size: 20,
+                        color: Colors.grey,
+                      ),
+                      if (_notificationController.hasNewNotification
+                          .value) // Show dot if new notification
+                        Positioned(
+                          right: 0,
+                          top: 0,
+                          child: Container(
+                            width: 8, // Size of the dot
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              color: MyColors.textPrimary, // Red dot color
+                              shape: BoxShape.circle,
                             ),
                           ),
-                      ],
-                    ),
+                        ),
+                    ],
                   ),
                 ),
+              ),
 
-                const GButton(
-                  icon: FontAwesomeIcons.user,
-                  text: 'Profile',
-                ),
-              ],
-              onTabChange: _handleIndexChanged,
-            );
-          }),
+              const GButton(
+                icon: FontAwesomeIcons.user,
+                text: 'Profile',
+              ),
+            ],
+            onTabChange: _handleIndexChanged,
+          ),
         ),
       ),
     );
@@ -117,9 +124,13 @@ class _NavbarPageState extends State<NavbarPage> {
   Widget _getPage(int pageIndex) {
     switch (pageIndex) {
       case 0:
-        return const BookerHome();
+        return widget.role == 'Venue Owner'
+            ? const OwnerHomeView()
+            : const BookerHome();
       case 1:
-        return const MyBookingsScreen();
+        return widget.role == 'Venue Owner'
+            ? const OwnerBookingsScreen()
+            : const MyBookingsScreen();
       case 2:
         return const NotificationScreen();
       case 3:

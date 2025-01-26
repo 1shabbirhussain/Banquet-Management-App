@@ -24,8 +24,9 @@ class NotificationScreen extends StatelessWidget {
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('notifications')
-            .where('user_id', isEqualTo: userId)
-            .orderBy('timestamp', descending: true) // Ensures the correct query order
+            .doc(userId)
+            .collection('user_notifications')
+            .orderBy('timestamp', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -72,11 +73,9 @@ class NotificationScreen extends StatelessWidget {
           final notifications = snapshot.data!.docs;
 
           return Padding(
-            padding: const EdgeInsets.symmetric(vertical:16.0, horizontal: 16),
+            padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16),
             child: ListView.separated(
-              separatorBuilder: (context, index) {
-                return const Divider();
-              },
+              separatorBuilder: (context, index) => const Divider(),
               itemCount: notifications.length,
               itemBuilder: (context, index) {
                 final notification =
@@ -84,9 +83,8 @@ class NotificationScreen extends StatelessWidget {
                 final timestamp = notification['timestamp'] != null
                     ? (notification['timestamp'] as Timestamp).toDate()
                     : null;
-            
+
                 return ListTile(
-                  contentPadding: const EdgeInsets.all(0),
                   leading: const Icon(Icons.notifications,
                       color: MyColors.buttonSecondary),
                   title: Text(

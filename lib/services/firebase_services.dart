@@ -32,23 +32,23 @@ class FirebaseService {
 
       // Check if user exists in the patients collection
       final patientDoc =
-          await _firestore.collection('patients').doc(user.uid).get();
+          await _firestore.collection('bookers').doc(user.uid).get();
 
       if (patientDoc.exists) {
         return {
           'isLoggedIn': true,
-          'role': 'Patient',
+          'role': "Venue Booker",
         };
       }
 
       // Check if user exists in the therapists collection
       final therapistDoc =
-          await _firestore.collection('therapists').doc(user.uid).get();
+          await _firestore.collection('owners').doc(user.uid).get();
 
       if (therapistDoc.exists) {
         return {
           'isLoggedIn': true,
-          'role': 'Therapist',
+          'role': "Venue Owner",
         };
       }
 
