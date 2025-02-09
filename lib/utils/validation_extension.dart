@@ -28,6 +28,29 @@ extension StringValidators on String {
     return null;
   }
 
+
+  String? validateLatitude() {
+    if (trim().isEmpty) {
+      return "Latitude is required";
+    }
+    double? value = double.tryParse(this);
+    if (value == null || value < -90 || value > 90) {
+      return "Enter a valid latitude (-90 to 90)";
+    }
+    return null;
+  }
+
+  String? validateLongitude() {
+    if (trim().isEmpty) {
+      return "Longitude is required";
+    }
+    double? value = double.tryParse(this);
+    if (value == null || value < -180 || value > 180) {
+      return "Enter a valid longitude (-180 to 180)";
+    }
+    return null;
+  }
+
   // Check if the string is a valid phone number
   String? validatePhoneNumber({String errorMessage = "Please enter a valid phone number"}) {
     return RegExp(r"^(?:[+0]9)?[0-9]{11}$").hasMatch(this) ? null : errorMessage;

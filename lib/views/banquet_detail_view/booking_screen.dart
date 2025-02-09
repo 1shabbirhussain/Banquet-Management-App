@@ -181,11 +181,10 @@ class _BookingScreenState extends State<BookingScreen> {
                     try {
                       final user = FirebaseAuth.instance.currentUser;
                       if (user != null) {
-                        await FirebaseFirestore.instance
-                            .collection('bookings')
-                            .add({
+                        await FirebaseFirestore.instance.collection('bookings').add({
                           'booker_id': user.uid,
                           'banquet_id': widget.banquet['id'],
+                          'booking_id': FirebaseFirestore.instance.collection('bookings').doc().id,
                           'banquet_name': name,
                           'date': selectedDate!.toIso8601String(),
                           'price': price,

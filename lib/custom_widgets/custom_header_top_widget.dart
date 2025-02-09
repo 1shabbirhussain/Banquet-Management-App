@@ -18,7 +18,7 @@ class CustomHeaderTopWidget extends StatelessWidget {
       children: [
         const Image(
           image: AssetImage('assets/images/logo.png'),
-          width: 100,
+          width: 80,
         ),
         IconButton(
           icon: const FaIcon(

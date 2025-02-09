@@ -1,10 +1,12 @@
-import 'dart:developer';
+import 'dart:convert';
+
 import 'package:event_ease/routes/app_routes.dart';
 import 'package:event_ease/utils/colors.dart';
 import 'package:event_ease/utils/snackbar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 class OwnerBookingsScreen extends StatefulWidget {
@@ -16,13 +18,7 @@ class OwnerBookingsScreen extends StatefulWidget {
 
 class _OwnerBookingsScreenState extends State<OwnerBookingsScreen> {
   String selectedFilter = "All"; // Default filter
-  final List<String> filters = [
-    "All",
-    "Pending",
-    "Confirmed",
-    "Rejected",
-    "Past"
-  ];
+  final List<String> filters = ["All", "Pending", "Confirmed", "Rejected", "Past"];
   final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
 
   @override
@@ -46,42 +42,32 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen> {
         ],
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('bookings')
-            .where('owner_id', isEqualTo: userId)
-            .snapshots(),
+        stream: FirebaseFirestore.instance.collection('bookings').where('owner_id', isEqualTo: userId).snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
           if (snapshot.hasError) {
-            return const Center(
-                child: Text("An error occurred while fetching bookings."));
+            return const Center(child: Text("An error occurred while fetching bookings."));
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
             return const Center(child: Text("No bookings found."));
           }
 
-          final bookings = snapshot.data!.docs
-              .where(
-                  (doc) => _filterBookings(doc.data() as Map<String, dynamic>))
-              .toList();
+          final bookings = snapshot.data!.docs.where((doc) => _filterBookings(doc.data() as Map<String, dynamic>)).toList();
 
           return bookings.isEmpty
               ? const Center(child: Text("No bookings match your filter."))
               : ListView.builder(
                   itemCount: bookings.length,
                   itemBuilder: (context, index) {
-                    final booking =
-                        bookings[index].data() as Map<String, dynamic>;
+                    final booking = bookings[index].data() as Map<String, dynamic>;
                     return OwnerBookingTile(
                       data: booking,
-                      onConfirm: () =>
-                          _confirmBooking(context, booking, bookings[index].id),
-                      onReject: () =>
-                          _rejectBooking(context, booking, bookings[index].id),
+                      onConfirm: () => _confirmBooking(context, booking, bookings[index].id),
+                      onReject: () => _rejectBooking(context, booking, bookings[index].id),
                     );
                   },
                 );
@@ -110,23 +96,16 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen> {
     }
   }
 
-  Future<void> _confirmBooking(BuildContext context,
-      Map<String, dynamic> booking, String bookingId) async {
+  Future<void> _confirmBooking(BuildContext context, Map<String, dynamic> booking, String bookingId) async {
     try {
-      await FirebaseFirestore.instance
-          .collection('bookings')
-          .doc(bookingId)
-          .update({'status': 'Confirmed'});
+      await FirebaseFirestore.instance.collection('bookings').doc(bookingId).update({'status': 'Confirmed'});
 
       // Update the banquet's unavailable dates
-      final banquetRef = FirebaseFirestore.instance
-          .collection('banquets')
-          .doc(booking['banquet_id']);
+      final banquetRef = FirebaseFirestore.instance.collection('banquets').doc(booking['banquet_id']);
       final banquetDoc = await banquetRef.get();
       if (banquetDoc.exists) {
         final banquetData = banquetDoc.data() as Map<String, dynamic>;
-        final unavailableDates =
-            List<String>.from(banquetData['not_available'] ?? []);
+        final unavailableDates = List<String>.from(banquetData['not_available'] ?? []);
         unavailableDates.add(booking['date']);
         await banquetRef.update({'not_available': unavailableDates});
       }
@@ -137,13 +116,9 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen> {
     }
   }
 
-  Future<void> _rejectBooking(BuildContext context,
-      Map<String, dynamic> booking, String bookingId) async {
+  Future<void> _rejectBooking(BuildContext context, Map<String, dynamic> booking, String bookingId) async {
     try {
-      await FirebaseFirestore.instance
-          .collection('bookings')
-          .doc(bookingId)
-          .update({'status': 'Rejected'});
+      await FirebaseFirestore.instance.collection('bookings').doc(bookingId).update({'status': 'Rejected'});
 
       SnackbarUtils.showSuccess("Booking rejected successfully.");
     } catch (e) {
@@ -207,20 +182,20 @@ class OwnerBookingTile extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: Stack(
         children: [
-           Opacity(
-              opacity: 0.2,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: SizedBox(
-                  height:status== "Confirmed" || status== "Rejected" ?150:  200,
-                  width: double.infinity,
-                  child: Image.network(
-                    image,
-                    fit: BoxFit.cover,
-                  ),
-                ),
+          Opacity(
+            opacity: 0.2,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: SizedBox(
+                height: status == "Confirmed" || status == "Rejected" ? 150 : 200,
+                width: double.infinity,
+                child: Image.memory(
+                        base64Decode(image),
+                        fit: BoxFit.cover,
+                      ),
               ),
             ),
+          ),
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -239,46 +214,58 @@ class OwnerBookingTile extends StatelessWidget {
                 const SizedBox(height: 10),
                 Row(
                   children: [
-                    const Icon(Icons.calendar_today,
-                        size: 16, color: MyColors.textPrimary),
+                    const Icon(Icons.calendar_today, size: 16, color: MyColors.textPrimary),
                     const SizedBox(width: 5),
                     Text(
                       "Date: ${DateFormat('d MMM, yyyy').format(DateTime.parse(date))}",
-                      style: const TextStyle(
-                          fontSize: 14, fontWeight: FontWeight.w500),
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
                 const SizedBox(height: 10),
                 Row(
                   children: [
-                    const Icon(Icons.attach_money,
-                        size: 16, color: MyColors.textPrimary),
+                    const Icon(Icons.attach_money, size: 16, color: MyColors.textPrimary),
                     const SizedBox(width: 5),
                     Text(
                       "Price: Rs. $price",
-                      style: const TextStyle(
-                          fontSize: 14, fontWeight: FontWeight.w500),
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
                 const SizedBox(height: 10),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Icon(Icons.info, size: 16, color: MyColors.textPrimary),
-                    const SizedBox(width: 5),
-                    Text(
-                      "Status: $status",
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: status == "Confirmed"
-                            ? Colors.green
-                            : status == "Pending"
-                                ? Colors.orange
-                                : Colors.red,
-                      ),
+                    Row(
+                      children: [
+                        const Icon(Icons.info, size: 16, color: MyColors.textPrimary),
+                        const SizedBox(width: 5),
+                        Text(
+                          "Status: $status",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: status == "Confirmed"
+                                ? Colors.green
+                                : status == "Pending"
+                                    ? Colors.orange
+                                    : Colors.red,
+                          ),
+                        ),
+                      ],
                     ),
+                    if (status == "Confirmed" && DateTime.parse(date).isAfter(DateTime.now()))
+                      GestureDetector(
+                        onTap: () {
+                          Get.toNamed(AppRoutes.chatScreen, arguments: {
+                            'ownerId': data['owner_id'],
+                            'bookerId': data['booker_id'],
+                            'bookingId': data['booking_id'] ?? "",
+                          });
+                        },
+                        child: const Icon(Icons.chat, color: MyColors.textPrimary),
+                      ),
                   ],
                 ),
                 const SizedBox(height: 10),
@@ -288,20 +275,16 @@ class OwnerBookingTile extends StatelessWidget {
                       Expanded(
                         child: ElevatedButton(
                           onPressed: onConfirm,
-                          style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green),
-                          child: const Text("Confirm",
-                              style: TextStyle(color: Colors.white)),
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                          child: const Text("Confirm", style: TextStyle(color: Colors.white)),
                         ),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: ElevatedButton(
                           onPressed: onReject,
-                          style:
-                              ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                          child: const Text("Reject",
-                              style: TextStyle(color: Colors.white)),
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                          child: const Text("Reject", style: TextStyle(color: Colors.white)),
                         ),
                       ),
                     ],

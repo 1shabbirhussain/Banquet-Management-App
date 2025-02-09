@@ -20,6 +20,7 @@ class NotificationScreen extends StatelessWidget {
         ),
         centerTitle: true,
         backgroundColor: MyColors.backgroundDark,
+        iconTheme: const IconThemeData(color: MyColors.textSecondary),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance

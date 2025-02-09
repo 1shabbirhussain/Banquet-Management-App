@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:event_ease/routes/app_routes.dart';
 import 'package:event_ease/utils/colors.dart';
 import 'package:flutter/material.dart';
@@ -231,20 +233,29 @@ class BanquetCard extends StatelessWidget {
           // Banquet Image
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
-            child: Image.network(imageUrl,
-                height: 120, width: double.infinity, fit: BoxFit.cover,
+            child: imageUrl.startsWith('http')
+              ? Image.network(imageUrl,
+                height: 120,
+                width: double.infinity,
+                fit: BoxFit.cover,
                 loadingBuilder: (context, child, loadingProgress) {
-              if (loadingProgress == null) return child;
-              return Skeletonizer(
-                enabled: true,
-                enableSwitchAnimation: true,
-                child: Container(
-                  height: 120,
-                  width: double.infinity,
-                  color: Colors.grey[300],
+                  if (loadingProgress == null) return child;
+                  return Skeletonizer(
+                  enabled: true,
+                  enableSwitchAnimation: true,
+                  child: Container(
+                    height: 120,
+                    width: double.infinity,
+                    color: Colors.grey[300],
+                  ),
+                  );
+                })
+              : Image.memory(
+                base64Decode(imageUrl),
+                height: 120,
+                width: double.infinity,
+                fit: BoxFit.cover,
                 ),
-              );
-            }),
           ),
 
           // Banquet Info

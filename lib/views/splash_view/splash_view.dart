@@ -32,7 +32,7 @@ class _SplashScreenState extends State<SplashScreen> {
       Get.offNamed(AppRoutes.navbar, arguments: {'role': role});
     } else {
 
-      Get.offNamed(AppRoutes.register);
+      Get.offNamed(AppRoutes.ownerLogin);
     }
   }
 
@@ -43,11 +43,11 @@ class _SplashScreenState extends State<SplashScreen> {
         width: double.infinity,
         height: double.infinity,
         color: MyColors.backgroundDark,
-        child: const Center(
-          child: Icon(
-            Icons.medical_services,
-            size: 100,
-            color: Colors.white,
+        child:  Center(
+          child: Image.asset(
+           "assets/images/logo.png",
+            height: 300,
+            // color: Colors.white,
           ),
         ),
       ),

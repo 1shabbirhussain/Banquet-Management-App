@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer';
 
 import 'package:event_ease/routes/app_routes.dart';
@@ -200,10 +201,10 @@ class _BookingTileState extends State<BookingTile> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: SizedBox(
-                  height:status== "Confirmed" && !isPast ? 155:  205,
+                  height: status == "Confirmed" && !isPast ? 155 : 205,
                   width: double.infinity,
-                  child: Image.network(
-                    banquetImageUrl!,
+                  child: Image.memory(
+                    base64Decode(banquetImageUrl!),
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -237,7 +238,9 @@ class _BookingTileState extends State<BookingTile> {
                           Text(
                             "Date: ${DateFormat('d MMM, yyyy').format(DateTime.parse(date))}",
                             style: const TextStyle(
-                                fontSize: 14, color: Colors.black87,fontWeight: FontWeight.w500),
+                                fontSize: 14,
+                                color: Colors.black87,
+                                fontWeight: FontWeight.w500),
                           ),
                         ],
                       ),
@@ -251,7 +254,8 @@ class _BookingTileState extends State<BookingTile> {
                           const SizedBox(width: 5),
                           Text(
                             "Price: Rs. $price",
-                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                            style: const TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.w500),
                           ),
                         ],
                       ),
@@ -290,7 +294,10 @@ class _BookingTileState extends State<BookingTile> {
                           TextButton(
                             onPressed: () {
                               Get.toNamed(AppRoutes.banquetDetailScreen,
-                                  arguments: {"banquet" : banquetData , "hideButton": true} );
+                                  arguments: {
+                                    "banquet": banquetData,
+                                    "hideButton": true
+                                  });
                               log("$banquetImageUrl Details");
                             },
                             child: const Text(
@@ -308,8 +315,9 @@ class _BookingTileState extends State<BookingTile> {
                   ],
                 ),
                 const SizedBox(height: 10),
+
                 // ========================Cancel Button=========================
-                if ((status == 'Pending' || status == 'Rejected')&& !isPast)
+                if ((status == 'Pending' || status == 'Rejected') && !isPast)
                   Align(
                     alignment: Alignment.center,
                     child: ElevatedButton(
@@ -321,7 +329,7 @@ class _BookingTileState extends State<BookingTile> {
                     ),
                   ),
 
-                  if (isPast && !widget.data.containsKey('rating'))
+                if (isPast && !widget.data.containsKey('rating'))
                   Row(
                     children: [
                       const Text("Rate now: "),
@@ -346,14 +354,34 @@ class _BookingTileState extends State<BookingTile> {
                         Icons.star,
                         color: Colors.amber,
                       ),
-                       Text("Your Ratings: ${widget.data['rating']}", style: const TextStyle(fontWeight: FontWeight.bold),),
+                      Text(
+                        "Your Ratings: ${widget.data['rating']}",
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ],
                   ),
                 // ===========================Rating============================
-                
               ],
             ),
           ),
+          if (status == "Confirmed" &&
+              DateTime.parse(date).isAfter(DateTime.now()))
+            Positioned(
+              right: 0,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: GestureDetector(
+                  onTap: () {
+                    Get.toNamed(AppRoutes.chatScreen, arguments: {
+                      'ownerId': widget.data['owner_id'],
+                      'bookerId': widget.data['booker_id'],
+                      'bookingId': widget.data['booking_id'] ?? "",
+                    });
+                  },
+                  child: const Icon(Icons.chat, color: MyColors.textPrimary),
+                ),
+              ),
+            ),
         ],
       ),
     );

@@ -1,5 +1,4 @@
 import 'package:event_ease/controllers/notification_icon_controller.dart';
-import 'package:event_ease/services/notification_listener.dart';
 import 'package:event_ease/services/notification_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -11,7 +10,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await NotificationService.initialize();
-  Get.put(NotificationController()); // Initialize the controller
+  Get.put(NotificationController());
 
 
   runApp(const MyApp());
@@ -23,11 +22,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      
-      debugShowCheckedModeBanner: false, // Removes the debug banner
-      initialRoute: AppRoutes.splash, // Set the initial route
-      getPages: AppRoutes.routes, // Register the routes
+      title: 'EventEase',
+      debugShowCheckedModeBanner: false, 
+      initialRoute: AppRoutes.splash, 
+      getPages: AppRoutes.routes,
       transitionDuration: const Duration(milliseconds: 300),
+      defaultTransition: Transition.fadeIn,
     );
   }
 }
