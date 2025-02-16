@@ -20,77 +20,107 @@ class MyBookingsScreen extends StatelessWidget {
         ''; // Fetch current user ID from Firebase Auth
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          "My Bookings",
-          style: TextStyle(color: MyColors.textSecondary),
+        appBar: AppBar(
+          title: const Text(
+            "My Bookings",
+            style: TextStyle(color: MyColors.textSecondary),
+          ),
+          centerTitle: true,
+          backgroundColor: MyColors.backgroundDark,
+          iconTheme: const IconThemeData(color: MyColors.textSecondary),
         ),
-        centerTitle: true,
-        backgroundColor: MyColors.backgroundDark,
-        iconTheme: const IconThemeData(color: MyColors.textSecondary),
-      ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('bookings')
-            .where('booker_id', isEqualTo: userId)
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+        body: StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('bookings')
+              .where('booker_id', isEqualTo: userId)
+              .orderBy('created_at',
+                  descending: true) // ✅ Match index order (created_at first)
+              .orderBy('status',
+                  descending: true) // ✅ Match index order (status second)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          if (snapshot.hasError) {
-            return const Center(
-                child: Text("An error occurred while fetching bookings."));
-          }
+            if (snapshot.hasError) {
+              return const Center(
+                  child: Text("An error occurred while fetching bookings."));
+            }
 
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text("No bookings found."));
-          }
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return const Center(child: Text("No bookings found."));
+            }
 
-          final bookings = snapshot.data!.docs;
+            final bookings = snapshot.data!.docs;
 
-          return Skeletonizer(
-            enabled: snapshot.connectionState == ConnectionState.waiting,
-            child: ListView.builder(
-              itemCount: bookings.length,
-              itemBuilder: (context, index) {
-                final booking = bookings[index].data() as Map<String, dynamic>;
-                return BookingTile(
-                  data: booking,
-                  onCancel: () =>
-                      _cancelBooking(context, booking, bookings[index].id),
-                  onRate: booking['status'] == 'Confirmed' &&
-                          !booking.containsKey('rating')
-                      ? (rating) => _rateBooking(
-                          context, booking, bookings[index].id, rating)
-                      : null,
-                );
-              },
-            ),
-          );
-        },
-      ),
-    );
+            return Skeletonizer(
+              enabled: snapshot.connectionState == ConnectionState.waiting,
+              child: ListView.builder(
+                itemCount: bookings.length,
+                itemBuilder: (context, index) {
+                  final booking =
+                      bookings[index].data() as Map<String, dynamic>;
+                  return BookingTile(
+                    data: booking,
+                    onCancel: () =>
+                        _cancelBooking(context, booking, bookings[index].id),
+                    onRate: booking['status'] == 'Confirmed' &&
+                            !booking.containsKey('rating')
+                        ? (rating) => _rateBooking(
+                            context, booking, bookings[index].id, rating)
+                        : null,
+                  );
+                },
+              ),
+            );
+          },
+        ));
   }
 
   Future<void> _cancelBooking(BuildContext context,
-      Map<String, dynamic> booking, String bookingId) async {
-    if (booking['status'] == 'Confirmed') {
-      SnackbarUtils.showError("You cannot cancel a confirmed booking.");
-      return;
-    }
-
-    try {
-      await FirebaseFirestore.instance
-          .collection('bookings')
-          .doc(bookingId)
-          .delete();
-      SnackbarUtils.showSuccess("Booking canceled successfully.");
-    } catch (e) {
-      SnackbarUtils.showError("Failed to cancel booking: $e");
-    }
+    Map<String, dynamic> booking, String bookingId) async {
+  if (booking['status'] == 'Confirmed') {
+    SnackbarUtils.showError("You cannot cancel a confirmed booking.");
+    return;
   }
+
+  try {
+    // ✅ 1. Get the booked date from the booking
+    final String bookedDate = booking['date'];
+    log("Attempting to remove booked date: $bookedDate from not_available list");
+
+    // ✅ 2. Remove the booked date from banquet's 'not_available' list
+    final banquetRef = FirebaseFirestore.instance
+        .collection('banquets')
+        .doc(booking['banquet_id']);
+
+    await banquetRef.update({
+      'not_available': FieldValue.arrayRemove([bookedDate])
+    }).then((_) {
+      log("Successfully removed booked date: $bookedDate from banquet's not_available list");
+    }).catchError((error) {
+      log("Failed to remove date from banquet: $error");
+    });
+
+    // ✅ 3. Delete the booking record
+    await FirebaseFirestore.instance
+        .collection('bookings')
+        .doc(bookingId)
+        .delete()
+        .then((_) {
+      log("Booking record with ID: $bookingId deleted successfully.");
+    }).catchError((error) {
+      log("Failed to delete booking record: $error");
+    });
+
+    SnackbarUtils.showSuccess("Booking canceled successfully.");
+  } catch (e) {
+    log("Error during cancellation process: $e");
+    SnackbarUtils.showError("Failed to cancel booking: $e");
+  }
+}
+
 
   Future<void> _rateBooking(BuildContext context, Map<String, dynamic> booking,
       String bookingId, double rating) async {
@@ -166,14 +196,15 @@ class _BookingTileState extends State<BookingTile> {
           .get();
 
       if (banquetSnapshot.exists) {
-        // log("Banquet details fetched successfully.");
         banquetData = banquetSnapshot.data() as Map<String, dynamic>;
-        setState(() {
-          banquetImageUrl = banquetData['images']?.isNotEmpty == true
-              ? banquetData['images'][0] // Get the first image URL
-              : null;
-        });
-        // log("$banquetImageUrl IMAGE URL");
+        if (mounted) {
+          // ✅ Check if the widget is still in the tree
+          setState(() {
+            banquetImageUrl = banquetData['images']?.isNotEmpty == true
+                ? banquetData['images'][0]
+                : null;
+          });
+        }
       }
     } catch (e) {
       debugPrint("Error fetching banquet details: $e");

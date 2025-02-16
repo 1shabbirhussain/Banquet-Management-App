@@ -116,15 +116,40 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen> {
     }
   }
 
-  Future<void> _rejectBooking(BuildContext context, Map<String, dynamic> booking, String bookingId) async {
-    try {
-      await FirebaseFirestore.instance.collection('bookings').doc(bookingId).update({'status': 'Rejected'});
+Future<void> _rejectBooking(BuildContext context, Map<String, dynamic> booking, String bookingId) async {
+  try {
+    // ✅ 1. Update Booking Status to 'Rejected'
+    await FirebaseFirestore.instance
+        .collection('bookings')
+        .doc(bookingId)
+        .update({'status': 'Rejected'});
 
-      SnackbarUtils.showSuccess("Booking rejected successfully.");
-    } catch (e) {
-      SnackbarUtils.showError("Failed to reject booking: $e");
+    // ✅ 2. Remove Date from Banquet 'not_available' List
+    final banquetRef = FirebaseFirestore.instance
+        .collection('banquets')
+        .doc(booking['banquet_id']);
+
+    final banquetDoc = await banquetRef.get();
+    if (banquetDoc.exists) {
+      final banquetData = banquetDoc.data() as Map<String, dynamic>;
+      final List<String> unavailableDates = List<String>.from(banquetData['not_available'] ?? []);
+
+      if (unavailableDates.contains(booking['date'])) {
+        unavailableDates.remove(booking['date']);
+        await banquetRef.update({'not_available': unavailableDates});
+        print("📅 Date removed from 'not_available': ${booking['date']}");
+      } else {
+        print("⚠️ Date not found in 'not_available' list.");
+      }
     }
+
+    SnackbarUtils.showSuccess("Booking rejected and date removed from availability.");
+  } catch (e) {
+    print("❌ Error removing date from 'not_available': $e");
+    SnackbarUtils.showError("Failed to reject booking: $e");
   }
+}
+
 
   void _showFilterDialog(BuildContext context) {
     showDialog(

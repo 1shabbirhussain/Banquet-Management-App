@@ -17,21 +17,49 @@ class BookingScreen extends StatefulWidget {
 
 class _BookingScreenState extends State<BookingScreen> {
   DateTime? selectedDate;
-  List<DateTime> unavailableDates = [];
 
-  @override
-  void initState() {
-    super.initState();
-    loadUnavailableDates();
+  // ✅ Stream to Get Unavailable Dates in Real-Time
+  Stream<List<DateTime>> getUnavailableDatesStream() {
+    return FirebaseFirestore.instance
+        .collection('banquets')
+        .doc(widget.banquet['id'])
+        .snapshots()
+        .map((snapshot) {
+      final List<dynamic>? dates = snapshot.data()?['not_available'];
+      if (dates != null) {
+        // Add today's date as blocked
+        final today = DateTime.now();
+        final todayDate = DateTime(today.year, today.month, today.day);
+        return dates.map((date) => DateTime.parse(date)).toList()
+          ..add(todayDate);
+      }
+      return [];
+    });
   }
 
-  void loadUnavailableDates() {
-    final List<dynamic> dates = widget.banquet['not_available'] ?? [];
-    unavailableDates = dates.map((date) => DateTime.parse(date)).toList();
+  // ✅ Add Selected Date to 'not_available' List in Firestore
+  Future<void> addDateToNotAvailableList(DateTime date) async {
+    try {
+      final banquetRef = FirebaseFirestore.instance
+          .collection('banquets')
+          .doc(widget.banquet['id']);
+
+      await banquetRef.update({
+        'not_available': FieldValue.arrayUnion([date.toIso8601String()])
+      });
+
+      print("📅 Date added to 'not_available': ${date.toIso8601String()}");
+    } catch (e) {
+      SnackbarUtils.showError("Failed to update unavailable dates: $e");
+    }
   }
 
-  bool isDateUnavailable(DateTime day) {
-    return unavailableDates.contains(DateTime(day.year, day.month, day.day));
+  // ✅ Check if a Date is Unavailable
+  bool isDateUnavailable(DateTime day, List<DateTime> unavailableDates) {
+    return unavailableDates.any((unavailableDate) =>
+        unavailableDate.year == day.year &&
+        unavailableDate.month == day.month &&
+        unavailableDate.day == day.day);
   }
 
   @override
@@ -49,89 +77,99 @@ class _BookingScreenState extends State<BookingScreen> {
         backgroundColor: MyColors.backgroundDark,
         iconTheme: const IconThemeData(color: MyColors.textSecondary),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Text(
-                name,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: MyColors.textPrimary,
-                ),
-              ),
-            ),
+      body: StreamBuilder<List<DateTime>>(
+        stream: getUnavailableDatesStream(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-            const SizedBox(height: 20),
-            // Calendar
-            const Text(
-              "Select a Date:",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 10),
-            TableCalendar(
-              headerStyle: const HeaderStyle(
-                formatButtonVisible: false,
-                titleCentered: true,
-              ),
-              firstDay: DateTime.now(),
-              lastDay: DateTime.now().add(const Duration(days: 365)),
-              focusedDay: selectedDate ?? DateTime.now(),
-              selectedDayPredicate: (day) {
-                return isSameDay(selectedDate, day);
-              },
-              onDaySelected: (selectedDay, focusedDay) {
-                if (!isDateUnavailable(selectedDay)) {
-                  setState(() {
-                    selectedDate = selectedDay;
-                  });
-                } else {
-                  SnackbarUtils.showError("Selected date is unavailable.");
-                }
-              },
-              calendarStyle: const CalendarStyle(
-                todayDecoration: BoxDecoration(
-                  color: Colors.deepPurple,
-                  shape: BoxShape.circle,
-                ),
-                selectedDecoration: BoxDecoration(
-                  color: Colors.green,
-                  shape: BoxShape.circle,
-                ),
-                disabledTextStyle: TextStyle(color: Colors.grey),
-              ),
-              enabledDayPredicate: (day) {
-                return !isDateUnavailable(day);
-              },
-            ),
-            const SizedBox(height: 20),
+          List<DateTime> unavailableDates = snapshot.data ?? [];
 
-            // Selected Date Display
-            if (selectedDate != null)
-              Text(
-                "Selected Date: ${selectedDate!.toLocal().toIso8601String().split('T')[0]}",
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black,
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Text(
+                    name,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: MyColors.textPrimary,
+                    ),
+                  ),
                 ),
-              ),
-            const SizedBox(height: 10),
-            Text(
-              "Price Per Day: Rs.$price",
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-              ),
+                const SizedBox(height: 20),
+                // 📅 Calendar with Real-Time Dates
+                const Text(
+                  "Select a Date:",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                TableCalendar(
+                  headerStyle: const HeaderStyle(
+                    formatButtonVisible: false,
+                    titleCentered: true,
+                  ),
+                  firstDay: DateTime.now(),
+                  lastDay: DateTime.now().add(const Duration(days: 365)),
+                  focusedDay: selectedDate ?? DateTime.now(),
+                  selectedDayPredicate: (day) {
+                    return isSameDay(selectedDate, day);
+                  },
+                  onDaySelected: (selectedDay, focusedDay) {
+                    if (!isDateUnavailable(selectedDay, unavailableDates)) {
+                      setState(() {
+                        selectedDate = selectedDay;
+                      });
+                    } else {
+                      SnackbarUtils.showError("Selected date is unavailable.");
+                    }
+                  },
+                  enabledDayPredicate: (day) {
+                    return !isDateUnavailable(day, unavailableDates);
+                  },
+                  calendarStyle: const CalendarStyle(
+                    todayDecoration: BoxDecoration(
+                      color: Colors.deepPurple,
+                      shape: BoxShape.circle,
+                    ),
+                    selectedDecoration: BoxDecoration(
+                      color: Colors.green,
+                      shape: BoxShape.circle,
+                    ),
+                    disabledTextStyle: TextStyle(color: Colors.grey),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // 🗓️ Selected Date Display
+                if (selectedDate != null)
+                  Text(
+                    "Selected Date: ${selectedDate!.toLocal().toIso8601String().split('T')[0]}",
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black,
+                    ),
+                  ),
+                const SizedBox(height: 10),
+                Text(
+                  "Price Per Day: Rs.$price",
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       ),
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(16.0),
@@ -182,14 +220,14 @@ class _BookingScreenState extends State<BookingScreen> {
                     try {
                       final user = FirebaseAuth.instance.currentUser;
                       if (user != null) {
-                        // ✅ Create a new booking document reference first
+                        // ✅ Create a new booking document reference
                         final bookingRef = FirebaseFirestore.instance
                             .collection('bookings')
                             .doc();
 
-                        // ✅ Use the same document ID for 'booking_id'
+                        // ✅ Save booking details
                         await bookingRef.set({
-                          'booking_id': bookingRef.id, // ✅ Same as document ID
+                          'booking_id': bookingRef.id,
                           'booker_id': user.uid,
                           'banquet_id': widget.banquet['id'],
                           'banquet_name': name,
@@ -200,6 +238,9 @@ class _BookingScreenState extends State<BookingScreen> {
                           'owner_id': widget.banquet['owner_id'],
                           'image_url': widget.banquet['images'][0],
                         });
+
+                        // ✅ Add selected date to 'not_available' list
+                        await addDateToNotAvailableList(selectedDate!);
 
                         SnackbarUtils.closeSnackbar();
                         SnackbarUtils.showSuccess("Venue booked successfully!");
