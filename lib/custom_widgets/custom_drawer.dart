@@ -67,11 +67,12 @@ class CustomDrawer extends StatelessWidget {
           _drawerItem(
               FontAwesomeIcons.calendarCheck,
               isOwner ? "Manage Bookings" : "My Bookings",
-              () => Get.toNamed(isOwner? AppRoutes.manageBookings : AppRoutes.myBookings)),
-          _drawerItem(
-              FontAwesomeIcons.bell,
-              "Notifications",
+              () => Get.toNamed(
+                  isOwner ? AppRoutes.manageBookings : AppRoutes.myBookings)),
+          _drawerItem(FontAwesomeIcons.bell, "Notifications",
               () => Get.toNamed(AppRoutes.notificationScreen)),
+          _drawerItem(FontAwesomeIcons.commentDots, "Chat History",
+              () => Get.toNamed(AppRoutes.chatInboxScreen)),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.menu_open),

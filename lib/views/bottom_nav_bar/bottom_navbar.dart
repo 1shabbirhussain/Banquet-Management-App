@@ -81,13 +81,13 @@ class _NavbarPageState extends State<NavbarPage> {
               // Notifications Tab with reactive icon
 
               GButton(
-                icon: FontAwesomeIcons.bell, // Keep the bell icon constant
-                text: 'Notifications',
+                icon: FontAwesomeIcons.message, // Keep the bell icon constant
+                text: 'Chat History',
                 leading: Obx(
                   () => Stack(
                     children: [
                       const Icon(
-                        FontAwesomeIcons.bell, // The main bell icon
+                        FontAwesomeIcons.commentDots, // The main chat icon
                         size: 20,
                         color: Colors.grey,
                       ),
@@ -133,7 +133,7 @@ class _NavbarPageState extends State<NavbarPage> {
             ? const OwnerBookingsScreen()
             : const MyBookingsScreen();
       case 2:
-        return InboxScreen();
+        return const InboxScreen();
       case 3:
         return ProfileView(role: widget.role);
       default:

@@ -16,6 +16,7 @@ import 'package:event_ease/views/profile_view/profile_view.dart';
 import 'package:event_ease/views/splash_view/splash_view.dart';
 import 'package:get/get.dart';
 
+import '../views/chat_view/inbox_screen.dart';
 import '../views/my_bookings_view/my_bookings_view.dart';
 
 class AppRoutes {
@@ -70,6 +71,12 @@ class AppRoutes {
       },
     ),
     GetPage(
+      name: chatInboxScreen,
+      page: () {
+        return const InboxScreen();
+      },
+    ),
+    GetPage(
       name: myBookings,
       page: () {
         return const MyBookingsScreen();
@@ -86,7 +93,9 @@ class AppRoutes {
         name: banquetDetailScreen,
         page: () {
           final banquet = Get.arguments['banquet'];
-          final hideButton = Get.arguments.containsKey('hideButton') ? Get.arguments['hideButton'] : false;
+          final hideButton = Get.arguments.containsKey('hideButton')
+              ? Get.arguments['hideButton']
+              : false;
           return BanquetDetailScreen(banquet: banquet, hideButton: hideButton);
         }),
     GetPage(

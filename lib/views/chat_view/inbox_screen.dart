@@ -32,6 +32,7 @@ class _InboxScreenState extends State<InboxScreen> {
         ),
         backgroundColor: MyColors.backgroundDark,
         centerTitle: true,
+        iconTheme: const IconThemeData(color: MyColors.textSecondary),
       ),
       body: Obx(() {
         if (chatController.chatList.isEmpty) {
