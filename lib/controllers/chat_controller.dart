@@ -9,6 +9,8 @@ class ChatController extends GetxController {
   var messages = <Map<String, dynamic>>[].obs; // Stores chat messages
   String chatId = "";
 
+  get chatList => null;
+
   /// Initializes the chat by creating or fetching an existing chat document
   void initializeChat(String ownerId, String bookerId, String bookingId) {
     chatId = "${ownerId}_${bookerId}_$bookingId"; // Unique chat document ID
@@ -43,4 +45,8 @@ class ChatController extends GetxController {
 
     await _firestore.collection("chats").doc(chatId).collection("messages").add(messageData);
   }
+
+  void fetchChatsForInbox() {}
+
+  void fetchAllChatsWithBookings() {}
 }

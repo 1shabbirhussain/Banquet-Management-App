@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:event_ease/controllers/notification_icon_controller.dart';
 import 'package:event_ease/services/notification_listener.dart';
 import 'package:event_ease/utils/colors.dart';
+import 'package:event_ease/views/chat_view/inbox_screen.dart';
 import 'package:event_ease/views/dashboard_view/booker_home.dart';
 import 'package:event_ease/views/dashboard_view/owner_home.dart';
 import 'package:event_ease/views/my_bookings_view/my_bookings_view.dart';
@@ -132,7 +133,7 @@ class _NavbarPageState extends State<NavbarPage> {
             ? const OwnerBookingsScreen()
             : const MyBookingsScreen();
       case 2:
-        return const NotificationScreen();
+        return InboxScreen();
       case 3:
         return ProfileView(role: widget.role);
       default:

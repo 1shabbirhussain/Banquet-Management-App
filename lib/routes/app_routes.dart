@@ -12,8 +12,11 @@ import 'package:event_ease/views/edit_profile_view/edit_profile_view.dart';
 import 'package:event_ease/views/manage_banquet_view/manage_banquet_screen.dart';
 import 'package:event_ease/views/my_bookings_view/owner_booking_view.dart';
 import 'package:event_ease/views/notification_view/notification_view.dart';
+import 'package:event_ease/views/profile_view/profile_view.dart';
 import 'package:event_ease/views/splash_view/splash_view.dart';
 import 'package:get/get.dart';
+
+import '../views/my_bookings_view/my_bookings_view.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -30,6 +33,11 @@ class AppRoutes {
   static const String chatScreen = '/chat-screen';
   static const String ownerBookingsScreen = '/ownerBookingsScreen';
   static const String notificationScreen = '/notificationScreen';
+  static const String chatInboxScreen = '/chatInboxScreen';
+  static const String profileScreen = '/profileScreen';
+  static const String manageBookings = '/manageBookingsScreen';
+  static const String myBookings = '/myBookingsScreen';
+  static const String inbox = '/inboxScreen';
 
   static final routes = [
     GetPage(name: splash, page: () => const SplashScreen()),
@@ -53,6 +61,25 @@ class AppRoutes {
       page: () {
         final role = Get.arguments['role'];
         return NavbarPage(role: role);
+      },
+    ),
+    GetPage(
+      name: manageBookings,
+      page: () {
+        return const OwnerBookingsScreen();
+      },
+    ),
+    GetPage(
+      name: myBookings,
+      page: () {
+        return const MyBookingsScreen();
+      },
+    ),
+    GetPage(
+      name: profileScreen,
+      page: () {
+        final role = Get.arguments['role'];
+        return ProfileView(role: role);
       },
     ),
     GetPage(

@@ -168,7 +168,8 @@ class _BookingScreenState extends State<BookingScreen> {
                             onPressed: () {
                               Navigator.pop(context, true);
                             },
-                            child: const Text("Yes", style: TextStyle(color: MyColors.white100)),
+                            child: const Text("Yes",
+                                style: TextStyle(color: MyColors.white100)),
                           ),
                         ],
                       );
@@ -181,10 +182,16 @@ class _BookingScreenState extends State<BookingScreen> {
                     try {
                       final user = FirebaseAuth.instance.currentUser;
                       if (user != null) {
-                        await FirebaseFirestore.instance.collection('bookings').add({
+                        // ✅ Create a new booking document reference first
+                        final bookingRef = FirebaseFirestore.instance
+                            .collection('bookings')
+                            .doc();
+
+                        // ✅ Use the same document ID for 'booking_id'
+                        await bookingRef.set({
+                          'booking_id': bookingRef.id, // ✅ Same as document ID
                           'booker_id': user.uid,
                           'banquet_id': widget.banquet['id'],
-                          'booking_id': FirebaseFirestore.instance.collection('bookings').doc().id,
                           'banquet_name': name,
                           'date': selectedDate!.toIso8601String(),
                           'price': price,
@@ -195,8 +202,9 @@ class _BookingScreenState extends State<BookingScreen> {
                         });
 
                         SnackbarUtils.closeSnackbar();
-                        SnackbarUtils.showSuccess("Venue booked susccessfully!");
-                        Get.offAllNamed(AppRoutes.navbar, arguments: {'role': 'Venue Booker'});
+                        SnackbarUtils.showSuccess("Venue booked successfully!");
+                        Get.offAllNamed(AppRoutes.navbar,
+                            arguments: {'role': 'Venue Booker'});
                       }
                     } catch (e) {
                       SnackbarUtils.closeSnackbar();
