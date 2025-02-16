@@ -19,7 +19,7 @@ class EditProfileScreen extends StatelessWidget {
   final RxString profileImagePath = ''.obs; // Store image path temporarily
   final RxString profileImageBase64 = ''.obs; // Store Base64 string of image
 
-  final TextEditingController emailController = TextEditingController();
+  // final TextEditingController emailController = TextEditingController();
   final TextEditingController nameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
   // final TextEditingController cityController = TextEditingController();
@@ -29,7 +29,7 @@ class EditProfileScreen extends StatelessWidget {
     // Retrieve data passed from ProfileView
     final arguments = Get.arguments ?? {};
     nameController.text = arguments['name'] ?? '';
-    emailController.text = arguments['email'] ?? '';
+    // emailController.text = arguments['email'] ?? '';
     phoneController.text = arguments['phone'] ?? '';
     genderController.value = arguments['gender'] ?? 'Male';
     selectedRole.value = arguments['role'];
@@ -120,14 +120,14 @@ class EditProfileScreen extends StatelessWidget {
             inputType: TextInputType.name,
             validator: (value) => value!.validateNotEmpty(),
           ),
-          const SizedBox(height: 20),
-          CustomTextFormField(
-            controller: emailController,
-            label: "Email",
-            hintText: "Enter your email",
-            inputType: TextInputType.emailAddress,
-            validator: (value) => value!.validateEmail(),
-          ),
+          // const SizedBox(height: 20),
+          // CustomTextFormField(
+          //   controller: emailController,
+          //   label: "Email",
+          //   hintText: "Enter your email",
+          //   inputType: TextInputType.emailAddress,
+          //   validator: (value) => value!.validateEmail(),
+          // ),
           const SizedBox(height: 20),
           CustomTextFormField(
             controller: phoneController,
@@ -217,7 +217,7 @@ class EditProfileScreen extends StatelessWidget {
   //ONPRESS SAVE PROFILE
   void _saveProfileChanges(BuildContext context) async {
     if (nameController.text.isEmpty ||
-        emailController.text.isEmpty ||
+        // emailController.text.isEmpty ||
         phoneController.text.isEmpty) {
       SnackbarUtils.showError("All fields are required.");
       return;
@@ -234,7 +234,7 @@ class EditProfileScreen extends StatelessWidget {
       // Updated data to save
       final updatedData = {
         'name': nameController.text.trim(),
-        'email': emailController.text.trim(),
+        // 'email': emailController.text.trim(),
         'phone': phoneController.text.trim(),
         // 'address': cityController.text.trim(),
         'gender': genderController.value,
