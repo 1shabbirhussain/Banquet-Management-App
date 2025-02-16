@@ -81,16 +81,16 @@ class _HomeScreenViewState extends State<OwnerHomeView> {
             ),
           ),
           leading: Builder(
-    builder: (context) => IconButton(
-      icon: const FaIcon(
-        FontAwesomeIcons.bars,
-        color: Colors.white,
-      ),
-      onPressed: () {
-        Scaffold.of(context).openDrawer();
-      },
-    ),
-  ),
+            builder: (context) => IconButton(
+              icon: const FaIcon(
+                FontAwesomeIcons.bars,
+                color: Colors.white,
+              ),
+              onPressed: () {
+                Scaffold.of(context).openDrawer();
+              },
+            ),
+          ),
           actions: [
             IconButton(
               icon: const FaIcon(

@@ -127,7 +127,7 @@ class _NavbarPageState extends State<NavbarPage> {
       case 0:
         return widget.role == 'Venue Owner'
             ? const OwnerHomeView()
-            : const BookerHome();
+            :  BookerHome();
       case 1:
         return widget.role == 'Venue Owner'
             ? const OwnerBookingsScreen()

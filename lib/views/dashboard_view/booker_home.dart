@@ -1,202 +1,240 @@
 import 'dart:convert';
 
+import 'package:event_ease/controllers/bokker_home_controller.dart';
+import 'package:event_ease/custom_widgets/custom_drawer.dart';
 import 'package:event_ease/routes/app_routes.dart';
+import 'package:event_ease/services/firebase_services.dart';
 import 'package:event_ease/utils/colors.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
-class BookerHome extends StatefulWidget {
-  const BookerHome({super.key});
 
-  @override
-  State<BookerHome> createState() => _BanquetListPageState();
-}
+class BookerHome extends StatelessWidget {
+  BookerHome({super.key});
 
-class _BanquetListPageState extends State<BookerHome> {
-  String searchQuery = "";
-  double? minPrice;
-  double? maxPrice;
-  bool isLoading = true; // Add loading state
-  List<DocumentSnapshot> allBanquets = [];
-  List<DocumentSnapshot> filteredBanquets = [];
+  final TextEditingController _searchController = TextEditingController();
+  final FirebaseService firebaseService = FirebaseService();
 
-  //=====================================METHODS==============================================
-  void applyFilters() {
-    filteredBanquets = allBanquets.where((doc) {
-      final data = doc.data() as Map<String, dynamic>;
-      final name = data['name']?.toString().toLowerCase() ?? "";
-      final price = double.tryParse(data['price_per_day'] ?? "0") ?? 0.0;
-
-      final matchesSearch =
-          searchQuery.isEmpty || name.contains(searchQuery.toLowerCase());
-      final matchesPrice = (minPrice == null || price >= minPrice!) &&
-          (maxPrice == null || price <= maxPrice!);
-
-      return matchesSearch && matchesPrice;
-    }).toList();
-  }
-  //=====================================METHODS==============================================
+  // GetX Controller
+  final BanquetController controller = Get.put(BanquetController());
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Choose your Banquet",
-            style: TextStyle(color: MyColors.textSecondary)),
+        title: const Text(
+          "Choose your Banquet",
+          style: TextStyle(color: MyColors.textSecondary),
+        ),
         centerTitle: true,
         backgroundColor: MyColors.backgroundDark,
-      ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection('banquets').snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return const Center(
-              child: Text("An error occurred while fetching banquets."),
-            );
-          }
-
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(
-              child: Text("No banquets available."),
-            );
-          }
-
-          // Update the list of all banquets when data changes
-          allBanquets = snapshot.data!.docs;
-          applyFilters();
-
-          return Skeletonizer(
-            enabled: snapshot.connectionState == ConnectionState.waiting,
-            enableSwitchAnimation: true,
-            child: Column(
-              children: [
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
-                  child: searchAndFilterWidget(context),
-                ),
-                Expanded(
-                  child: GridView.builder(
-                    padding: const EdgeInsets.all(16),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 0.75,
-                    ),
-                    itemCount: filteredBanquets.length,
-                    itemBuilder: (context, index) {
-                      final banquet = filteredBanquets[index].data()
-                          as Map<String, dynamic>;
-
-                      return GestureDetector(
-                        onTap: () {
-                          // Navigate to banquet details
-                          Get.toNamed(AppRoutes.banquetDetailScreen,
-                              arguments: {
-                                'banquet': banquet,
-                                "hideButton": false
-                              });
-                        },
-                        child: BanquetCard(banquet: banquet),
-                      );
-                    },
-                  ),
-                ),
-              ],
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const FaIcon(
+              FontAwesomeIcons.bars,
+              color: Colors.white,
             ),
-          );
-        },
+            onPressed: () {
+              Scaffold.of(context).openDrawer();
+            },
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const FaIcon(
+              FontAwesomeIcons.bell,
+              color: Colors.white,
+            ),
+            onPressed: () {
+              Get.toNamed(AppRoutes.notificationScreen);
+            },
+          )
+        ],
+      ),
+      drawer: Obx(
+        () => CustomDrawer(
+          userName: controller.userName.value,
+          userEmail: controller.userEmail.value,
+          profilePictureUrl: controller.profilePictureUrl.value,
+          isOwner: false,
+        ),
+      ),
+      body: Column(
+        children: [
+          // Search and Filter Widget
+          searchAndFilterWidget(),
+
+          // Pull-to-Refresh and List of Banquets
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: () async {
+                await controller.fetchBanquets(); // Pull-to-refresh action
+              },
+              child: Obx(() {
+                if (controller.filteredBanquets.isEmpty) {
+                  return const Center(
+                    child: Text(
+                      "No results found. Try adjusting your filters.",
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                  );
+                }
+
+                return GridView.builder(
+                  padding: const EdgeInsets.all(16),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: 0.75,
+                  ),
+                  itemCount: controller.filteredBanquets.length,
+                  itemBuilder: (context, index) {
+                    final banquet = controller.filteredBanquets[index].data()
+                        as Map<String, dynamic>;
+
+                    return GestureDetector(
+                      onTap: () {
+                        Get.toNamed(
+                          AppRoutes.banquetDetailScreen,
+                          arguments: {
+                            'banquet': banquet,
+                            "hideButton": false,
+                          },
+                        );
+                      },
+                      child: BanquetCard(banquet: banquet),
+                    );
+                  },
+                );
+              }),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Row searchAndFilterWidget(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: TextField(
-            decoration: InputDecoration(
-              hintText: "Search Banquets...",
-              prefixIcon: const Icon(Icons.search),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
+  /// **SEARCH BAR & FILTER BUTTON**
+  Widget searchAndFilterWidget() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+      child: Row(
+        children: [
+          // Search Bar
+          Expanded(
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: "Search Banquets...",
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
+              onChanged: (value) {
+                controller.searchBanquets(value);
+              },
             ),
-            onChanged: (value) {
-              setState(() {
-                searchQuery = value;
-                applyFilters();
-              });
+          ),
+          const SizedBox(width: 10),
+
+          // Filter Button
+          IconButton(
+            icon: const Icon(Icons.filter_list),
+            color: MyColors.accent,
+            onPressed: () {
+              showFilterDialog();
             },
           ),
+        ],
+      ),
+    );
+  }
+
+  /// **FILTER DIALOG BOX (With Radio Buttons for Sorting)**
+  void showFilterDialog() {
+    Get.defaultDialog(
+      title: "Sort Banquets",
+      content: Obx(
+        () => Column(
+          children: [
+            // Sort By Name
+            ListTile(
+              title: const Text("Name: A → Z"),
+              leading: Radio<String>(
+                value: 'name_asc',
+                groupValue: controller.selectedSortOption.value,
+                onChanged: (value) =>
+                    controller.selectedSortOption.value = value!,
+              ),
+            ),
+            ListTile(
+              title: const Text("Name: Z → A"),
+              leading: Radio<String>(
+                value: 'name_desc',
+                groupValue: controller.selectedSortOption.value,
+                onChanged: (value) =>
+                    controller.selectedSortOption.value = value!,
+              ),
+            ),
+
+            // Sort By Price
+            ListTile(
+              title: const Text("Price: Low → High"),
+              leading: Radio<String>(
+                value: 'price_asc',
+                groupValue: controller.selectedSortOption.value,
+                onChanged: (value) =>
+                    controller.selectedSortOption.value = value!,
+              ),
+            ),
+            ListTile(
+              title: const Text("Price: High → Low"),
+              leading: Radio<String>(
+                value: 'price_desc',
+                groupValue: controller.selectedSortOption.value,
+                onChanged: (value) =>
+                    controller.selectedSortOption.value = value!,
+              ),
+            ),
+
+            // Sort By Rating
+            ListTile(
+              title: const Text("Rating: High → Low"),
+              leading: Radio<String>(
+                value: 'rating_high',
+                groupValue: controller.selectedSortOption.value,
+                onChanged: (value) =>
+                    controller.selectedSortOption.value = value!,
+              ),
+            ),
+            ListTile(
+              title: const Text("Rating: Low → High"),
+              leading: Radio<String>(
+                value: 'rating_low',
+                groupValue: controller.selectedSortOption.value,
+                onChanged: (value) =>
+                    controller.selectedSortOption.value = value!,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 10),
-        IconButton(
-          icon: const Icon(Icons.filter_list),
-          color: MyColors.accent,
-          onPressed: () {},
-          // onPressed: () async {
-          //   await showModalBottomSheet(
-          //     context: context,
-          //     builder: (context) {
-          //       double? tempMinPrice = minPrice;
-          //       double? tempMaxPrice = maxPrice;
-          //       return StatefulBuilder(
-          //         builder: (context, setState) {
-          //           return Padding(
-          //             padding: const EdgeInsets.all(16.0),
-          //             child: Column(
-          //               mainAxisSize: MainAxisSize.min,
-          //               children: [
-          //                 TextField(
-          //                   keyboardType: TextInputType.number,
-          //                   decoration: const InputDecoration(
-          //                     labelText: "Min Price",
-          //                   ),
-          //                   onChanged: (value) {
-          //                     setState(() {
-          //                       tempMinPrice = double.tryParse(value);
-          //                     });
-          //                   },
-          //                 ),
-          //                 const SizedBox(height: 10),
-          //                 TextField(
-          //                   keyboardType: TextInputType.number,
-          //                   decoration: const InputDecoration(
-          //                     labelText: "Max Price",
-          //                   ),
-          //                   onChanged: (value) {
-          //                     setState(() {
-          //                       tempMaxPrice = double.tryParse(value);
-          //                     });
-          //                   },
-          //                 ),
-          //                 const SizedBox(height: 20),
-          //                 ElevatedButton(
-          //                   onPressed: () {
-          //                     setState(() {
-          //                       minPrice = tempMinPrice;
-          //                       maxPrice = tempMaxPrice;
-          //                     });
-          //                     applyFilters();
-          //                     Navigator.pop(context);
-          //                   },
-          //                   child: const Text("Apply Filters"),
-          //                 ),
-          //               ],
-          //             ),
-          //           );
-          //         },
-          //       );
-          //     },
-          //   );
-          // },
-        ),
-      ],
+      ),
+      confirm: ElevatedButton(
+        onPressed: () {
+          controller.applyFilters();
+          Get.back();
+        },
+        child: const Text("Apply"),
+      ),
+      cancel: TextButton(
+        onPressed: () => Get.back(),
+        child: const Text("Cancel"),
+      ),
     );
   }
 }
@@ -234,28 +272,26 @@ class BanquetCard extends StatelessWidget {
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
             child: imageUrl.startsWith('http')
-              ? Image.network(imageUrl,
-                height: 120,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Skeletonizer(
-                  enabled: true,
-                  enableSwitchAnimation: true,
-                  child: Container(
+                ? Image.network(imageUrl,
+                    height: 120, width: double.infinity, fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Skeletonizer(
+                      enabled: true,
+                      enableSwitchAnimation: true,
+                      child: Container(
+                        height: 120,
+                        width: double.infinity,
+                        color: Colors.grey[300],
+                      ),
+                    );
+                  })
+                : Image.memory(
+                    base64Decode(imageUrl),
                     height: 120,
                     width: double.infinity,
-                    color: Colors.grey[300],
+                    fit: BoxFit.cover,
                   ),
-                  );
-                })
-              : Image.memory(
-                base64Decode(imageUrl),
-                height: 120,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                ),
           ),
 
           // Banquet Info
