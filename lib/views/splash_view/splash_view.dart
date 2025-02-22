@@ -1,5 +1,6 @@
 import 'package:event_ease/routes/app_routes.dart';
 import 'package:event_ease/utils/colors.dart';
+import 'package:event_ease/views/appIntro/app_intro.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -32,7 +33,7 @@ class _SplashScreenState extends State<SplashScreen> {
       Get.offNamed(AppRoutes.navbar, arguments: {'role': role});
     } else {
 
-      Get.offNamed(AppRoutes.ownerLogin);
+      Get.off(const AppIntro());
     }
   }
 

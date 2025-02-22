@@ -9,7 +9,7 @@ import 'package:get/get.dart';
 class OwnerLoginScreen extends StatelessWidget {
   OwnerLoginScreen({super.key});
 
-  final AuthController _authController = Get.find<AuthController>();
+  final AuthController _authController = Get.put<AuthController>(AuthController());
 
   @override
   Widget build(BuildContext context) {
