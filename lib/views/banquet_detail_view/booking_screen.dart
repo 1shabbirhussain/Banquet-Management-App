@@ -1,4 +1,5 @@
 import 'package:event_ease/routes/app_routes.dart';
+import 'package:event_ease/views/banquet_detail_view/payment_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:get/get.dart';
@@ -184,6 +185,7 @@ class _BookingScreenState extends State<BookingScreen> {
           onPressed: selectedDate == null
               ? null
               : () async {
+                  // Show confirmation dialog
                   final confirmed = await showDialog<bool>(
                     context: context,
                     builder: (context) {
@@ -195,7 +197,8 @@ class _BookingScreenState extends State<BookingScreen> {
                         actions: [
                           TextButton(
                             onPressed: () {
-                              Navigator.pop(context, false);
+                              Navigator.pop(
+                                  context, false); // User clicked "No"
                             },
                             child: const Text("No"),
                           ),
@@ -204,7 +207,8 @@ class _BookingScreenState extends State<BookingScreen> {
                               backgroundColor: MyColors.buttonSecondary,
                             ),
                             onPressed: () {
-                              Navigator.pop(context, true);
+                              Navigator.pop(
+                                  context, true); // User clicked "Yes"
                             },
                             child: const Text("Yes",
                                 style: TextStyle(color: MyColors.white100)),
@@ -214,42 +218,53 @@ class _BookingScreenState extends State<BookingScreen> {
                     },
                   );
 
+                  // If user confirms, navigate to payment screen
                   if (confirmed == true) {
-                    SnackbarUtils.showLoading("Booking your venue...");
+                    final paymentSuccess = await Get.to<bool>(
+                      () => DummyPaymentScreen(
+                        amount: double.parse(price),
+                      ),
+                    );
 
-                    try {
-                      final user = FirebaseAuth.instance.currentUser;
-                      if (user != null) {
-                        // ✅ Create a new booking document reference
-                        final bookingRef = FirebaseFirestore.instance
-                            .collection('bookings')
-                            .doc();
+                    // If payment is successful, proceed to save booking
+                    if (paymentSuccess == true) {
+                      SnackbarUtils.showLoading("Booking your venue...");
 
-                        // ✅ Save booking details
-                        await bookingRef.set({
-                          'booking_id': bookingRef.id,
-                          'booker_id': user.uid,
-                          'banquet_id': widget.banquet['id'],
-                          'banquet_name': name,
-                          'date': selectedDate!.toIso8601String(),
-                          'price': price,
-                          'created_at': DateTime.now().toIso8601String(),
-                          'status': "Pending",
-                          'owner_id': widget.banquet['owner_id'],
-                          'image_url': widget.banquet['images'][0],
-                        });
+                      try {
+                        final user = FirebaseAuth.instance.currentUser;
+                        if (user != null) {
+                          // ✅ Create a new booking document reference
+                          final bookingRef = FirebaseFirestore.instance
+                              .collection('bookings')
+                              .doc();
 
-                        // ✅ Add selected date to 'not_available' list
-                        await addDateToNotAvailableList(selectedDate!);
+                          // ✅ Save booking details
+                          await bookingRef.set({
+                            'booking_id': bookingRef.id,
+                            'booker_id': user.uid,
+                            'banquet_id': widget.banquet['id'],
+                            'banquet_name': name,
+                            'date': selectedDate!.toIso8601String(),
+                            'price': price,
+                            'created_at': DateTime.now().toIso8601String(),
+                            'status': "Pending",
+                            'owner_id': widget.banquet['owner_id'],
+                            'image_url': widget.banquet['images'][0],
+                          });
 
+                          // ✅ Add selected date to 'not_available' list
+                          await addDateToNotAvailableList(selectedDate!);
+
+                          SnackbarUtils.closeSnackbar();
+                          SnackbarUtils.showSuccess(
+                              "Venue booked successfully!");
+                          Get.offAllNamed(AppRoutes.navbar,
+                              arguments: {'role': 'Venue Booker'});
+                        }
+                      } catch (e) {
                         SnackbarUtils.closeSnackbar();
-                        SnackbarUtils.showSuccess("Venue booked successfully!");
-                        Get.offAllNamed(AppRoutes.navbar,
-                            arguments: {'role': 'Venue Booker'});
+                        SnackbarUtils.showError("An error occurred: $e");
                       }
-                    } catch (e) {
-                      SnackbarUtils.closeSnackbar();
-                      SnackbarUtils.showError("An error occurred: $e");
                     }
                   }
                 },

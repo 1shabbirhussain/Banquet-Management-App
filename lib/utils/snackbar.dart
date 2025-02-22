@@ -30,6 +30,16 @@ class SnackbarUtils {
     );
   }
 
+  // ✅ New Method: Show Info Snackbar
+  static void showInfo(String message, {String title = "Info"}) {
+    _showSnackbar(
+      title: title,
+      message: message,
+      backgroundColor: Colors.orange.shade400, // Use orange for info
+      icon: Icons.info,
+    );
+  }
+
   static void closeSnackbar() {
     if (Get.isSnackbarOpen) {
       Get.back();
