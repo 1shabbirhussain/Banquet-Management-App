@@ -1,8 +1,8 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart'; // Add this import
 import 'package:event_ease/utils/colors.dart';
 import 'package:event_ease/routes/app_routes.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -25,7 +25,6 @@ class CustomDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Drawer(
       child: Column(
-        // padding: EdgeInsets.zero,
         children: [
           Container(
             color: MyColors.backgroundDark,
@@ -73,6 +72,22 @@ class CustomDrawer extends StatelessWidget {
               () => Get.toNamed(AppRoutes.notificationScreen)),
           _drawerItem(FontAwesomeIcons.commentDots, "Chat History",
               () => Get.toNamed(AppRoutes.chatInboxScreen)),
+          const Divider(),
+          // Add the "Need Help" tile
+          _drawerItem(FontAwesomeIcons.headset, 'Need Help', () async {
+            const phoneNumber = '+923158426173'; // WhatsApp number
+            const whatsappUrl = 'https://wa.me/$phoneNumber';
+
+            if (await canLaunchUrl(whatsappUrl as Uri)) {
+              await launchUrl(whatsappUrl as Uri);
+            } else {
+              Get.snackbar(
+                'Error',
+                'Could not launch WhatsApp.',
+                snackPosition: SnackPosition.BOTTOM,
+              );
+            }
+          }),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.menu_open),

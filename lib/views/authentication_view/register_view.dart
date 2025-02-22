@@ -3,6 +3,7 @@ import 'package:event_ease/custom_widgets/custom_dropdown.dart';
 import 'package:event_ease/custom_widgets/custom_text_field.dart';
 import 'package:event_ease/utils/colors.dart';
 import 'package:event_ease/utils/validation_extension.dart';
+import 'package:event_ease/views/authentication_view/privacy_policy.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -282,8 +283,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             Expanded(
               child: GestureDetector(
                 onTap: () {
-                  _authController.termsAccepted.value =
-                      !_authController.termsAccepted.value;
+                 Get.to(const PrivacyPolicyScreen());
                 },
                 child: const Text(
                   "I agree to the Terms and Conditions",
