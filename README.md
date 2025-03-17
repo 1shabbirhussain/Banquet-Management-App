@@ -2,6 +2,38 @@
 
 This Banquet Management App was developed for the students of Sindh Madarsatul Islam University Karachi. It utilizes **Firebase** for database management, **GetX** for state management, **Flutter Maps** for location services, live chat functionality, and more to streamline banquet management processes.
 
+## UI
+<div align="center">
+  <video width="320" height="240" controls>
+    <source src="assets/images/1.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+</div>
+
+<div align="center">
+  <img src="assets/images/1.png" width="200" style="display: inline-block; margin-right: 10px;" />
+  <img src="assets/images/2.png" width="200" style="display: inline-block; margin-right: 10px;" />
+  <img src="assets/images/3.png" width="200" style="display: inline-block; margin-right: 10px;" />
+</div>
+
+<div align="center">
+  <img src="assets/images/4.png" width="200" style="display: inline-block; margin-right: 10px;" />
+  <img src="assets/images/5.png" width="200" style="display: inline-block; margin-right: 10px;" />
+  <img src="assets/images/6.png" width="200" style="display: inline-block; margin-right: 10px;" />
+</div>
+
+<div align="center">
+  <img src="assets/images/7.png" width="200" style="display: inline-block; margin-right: 10px;" />
+  <img src="assets/images/8.png" width="200" style="display: inline-block; margin-right: 10px;" />
+  <img src="assets/images/9.png" width="200" style="display: inline-block; margin-right: 10px;" />
+</div>
+
+<div align="center">
+  <img src="assets/images/10.png" width="200" style="display: inline-block; margin-right: 10px;" />
+  <img src="assets/images/11.png" width="200" style="display: inline-block; margin-right: 10px;" />
+  <img src="assets/images/12.png" width="200" style="display: inline-block;" />
+</div>
+
 ## Features
 
 ### Venue Booker
